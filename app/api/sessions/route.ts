@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createSessionSchema, generateSessionCode } from '@/lib/schemas/session';
+import { attachQuestionsToSession } from '@/lib/session-questions-attach';
 import { authenticateRequest } from '@/lib/supabase/request-auth';
 import { getOrCreateDefaultWorkshopId } from '@/lib/workshops';
 
@@ -54,28 +55,7 @@ export async function POST(request: Request) {
 
   const workshopId = await getOrCreateDefaultWorkshopId(supabase, userId);
 
-  // Keep only questions that actually belong to this facilitator's workshop,
-  // preserving the requested order.
-  const { data: owned, error: ownedError } = await supabase
-    .from('questions')
-    .select('id')
-    .eq('workshop_id', workshopId)
-    .in('id', parsed.data.questionIds);
-
-  if (ownedError) {
-    return NextResponse.json({ error: ownedError.message }, { status: 500 });
-  }
-
-  const ownedIds = new Set((owned ?? []).map((q) => q.id));
-  const questionIds = parsed.data.questionIds.filter((id) => ownedIds.has(id));
-  if (questionIds.length === 0) {
-    return NextResponse.json(
-      { error: 'None of the selected questions were found.' },
-      { status: 400 },
-    );
-  }
-
-  // Insert the session, retrying on the rare session_code collision.
+  // Create the (empty) session, retrying on the rare session_code collision.
   let sessionId: string | null = null;
   let sessionCode = '';
   for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt += 1) {
@@ -102,16 +82,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const rows = questionIds.map((questionId, index) => ({
-    session_id: sessionId as string,
-    question_id: questionId,
-    launch_order: index,
-  }));
-
-  const { error: linkError } = await supabase.from('session_questions').insert(rows);
-
-  if (linkError) {
-    return NextResponse.json({ error: linkError.message }, { status: 500 });
+  // Optionally attach polls now (sessions can also be filled later).
+  const attachError = await attachQuestionsToSession(supabase, sessionId, parsed.data.questionIds);
+  if (attachError) {
+    return NextResponse.json({ error: attachError }, { status: 500 });
   }
 
   return NextResponse.json(
