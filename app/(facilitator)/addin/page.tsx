@@ -92,6 +92,14 @@ export default function AddinPage() {
         <StatusPill label={authLabel} state={authState} />
       </section>
 
+      {/* Flow: spin up a session room first, then fill it with polls, then present. */}
+      <section>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Sessions
+        </h2>
+        <SessionManager />
+      </section>
+
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Polls</h2>
         {/* getSelectedSlide reads the PowerPoint selection; passing it here keeps
@@ -114,13 +122,6 @@ export default function AddinPage() {
             subscribeToSlideChange((slide) => onChange(slide ? slide.slideId : null))
           }
         />
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Sessions
-        </h2>
-        <SessionManager />
       </section>
     </main>
   );

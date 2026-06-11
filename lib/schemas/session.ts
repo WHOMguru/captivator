@@ -1,15 +1,17 @@
 import { z } from 'zod';
 
-// Validates the "create session" payload shared by the launcher form and the
-// POST /api/sessions route: which questions to include, in order.
+// Validates the "create session" payload. Questions are optional now — a session
+// is created as an empty room and polls are attached afterward.
 export const createSessionSchema = z.object({
-  questionIds: z
-    .array(z.string().uuid())
-    .min(1, 'Select at least one question.')
-    .max(50, 'Up to fifty questions per session.'),
+  questionIds: z.array(z.string().uuid()).max(50).optional().default([]),
 });
 
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
+
+// Payload for attaching polls to an existing session.
+export const attachQuestionsSchema = z.object({
+  questionIds: z.array(z.string().uuid()).min(1).max(50),
+});
 
 // Join codes: 6 chars, uppercase, ambiguity-free alphabet (no O/0, I/1).
 export const SESSION_CODE_LENGTH = 6;

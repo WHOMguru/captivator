@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { SessionResults } from '@/components/results/SessionResults';
 import { authedFetch } from '@/lib/api';
 import { ensureSession } from '@/lib/supabase/ensure-session';
 import { cn } from '@/lib/utils';
 import type { SessionStatus } from '@/types/database';
 
-import { SessionResults } from '@/components/results/SessionResults';
-
+import { SessionPolls } from './SessionPolls';
 import { SessionQrCode } from './SessionQrCode';
-import type { QuestionOption, SessionListItem } from './types';
+import type { SessionListItem } from './types';
 
 const BADGE: Record<SessionStatus, string> = {
   draft: 'bg-slate-100 text-slate-600',
@@ -35,12 +35,10 @@ export function SessionManager() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
-  const [questions, setQuestions] = useState<QuestionOption[]>([]);
-  const [launcherOpen, setLauncherOpen] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [codeId, setCodeId] = useState<string | null>(null);
   const [resultsId, setResultsId] = useState<string | null>(null);
+  const [pollsId, setPollsId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await authedFetch('/api/sessions');
@@ -79,27 +77,14 @@ export function SessionManager() {
     };
   }, [refresh]);
 
-  const openLauncher = async () => {
-    setLauncherOpen(true);
-    setSelected([]);
-    const res = await authedFetch('/api/questions');
-    if (res.ok) {
-      const body = (await res.json()) as { questions: QuestionOption[] };
-      setQuestions(body.questions);
-    }
-  };
-
-  const toggle = (id: string) =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
-  const createSession = async () => {
+  const startSession = async () => {
     setBusy(true);
     setError(null);
     try {
       const res = await authedFetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionIds: selected }),
+        body: JSON.stringify({}),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -107,8 +92,8 @@ export function SessionManager() {
       }
       const created = (await res.json()) as { id: string };
       await refresh();
-      setLauncherOpen(false);
-      setExpandedId(created.id);
+      // Open the new session's poll picker so the facilitator can fill it.
+      setPollsId(created.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create the session.');
     } finally {
@@ -121,7 +106,7 @@ export function SessionManager() {
     try {
       await authedFetch(`/api/sessions/${id}/${action}`, { method: 'PATCH' });
       await refresh();
-      if (action === 'start') setExpandedId(id);
+      if (action === 'start') setCodeId(id);
     } finally {
       setBusy(false);
     }
@@ -147,66 +132,22 @@ export function SessionManager() {
         </div>
       )}
 
-      {!launcherOpen && (
-        <button
-          type="button"
-          onClick={openLauncher}
-          className="w-full rounded-md bg-captivator-accent px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          + Start a session
-        </button>
-      )}
-
-      {launcherOpen && (
-        <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Select questions
-          </p>
-          {questions.length === 0 ? (
-            <p className="text-sm text-slate-500">No questions yet — add polls first.</p>
-          ) : (
-            <ul className="space-y-1">
-              {questions.map((q) => (
-                <li key={q.id}>
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(q.id)}
-                      onChange={() => toggle(q.id)}
-                    />
-                    <span className="truncate">{q.prompt}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-          {error && <p className="text-xs text-red-600">{error}</p>}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              disabled={busy || selected.length === 0}
-              onClick={createSession}
-              className={cn(
-                'rounded-md bg-captivator-accent px-4 py-2 text-sm font-medium text-white transition hover:opacity-90',
-                (busy || selected.length === 0) && 'opacity-50',
-              )}
-            >
-              Create session
-            </button>
-            <button
-              type="button"
-              onClick={() => setLauncherOpen(false)}
-              className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={startSession}
+        disabled={busy}
+        className={cn(
+          'w-full rounded-md bg-captivator-accent px-4 py-2 text-sm font-medium text-white transition hover:opacity-90',
+          busy && 'opacity-60',
+        )}
+      >
+        + New session
+      </button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       {sessions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
-          No sessions yet.
+          No sessions yet. Create one, then add polls to it.
         </p>
       ) : (
         <ul className="space-y-2">
@@ -219,7 +160,7 @@ export function SessionManager() {
                     {session.session_code}
                   </span>
                   <span className="text-xs text-slate-400">
-                    {session.question_count} question
+                    {session.question_count} poll
                     {session.question_count === 1 ? '' : 's'}
                   </span>
                 </div>
@@ -244,23 +185,39 @@ export function SessionManager() {
                       End
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId((id) => (id === session.id ? null : session.id))}
-                    className="font-medium text-slate-500 hover:underline"
-                  >
-                    {expandedId === session.id ? 'Hide code' : 'Show code'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResultsId((id) => (id === session.id ? null : session.id))}
-                    className="font-medium text-slate-500 hover:underline"
-                  >
-                    {resultsId === session.id ? 'Hide results' : 'Results'}
-                  </button>
                 </div>
               </div>
-              {expandedId === session.id && (
+
+              <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setPollsId((id) => (id === session.id ? null : session.id))}
+                  className="font-medium text-slate-500 hover:underline"
+                >
+                  {pollsId === session.id ? 'Hide polls' : 'Polls'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCodeId((id) => (id === session.id ? null : session.id))}
+                  className="font-medium text-slate-500 hover:underline"
+                >
+                  {codeId === session.id ? 'Hide code' : 'Show code'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResultsId((id) => (id === session.id ? null : session.id))}
+                  className="font-medium text-slate-500 hover:underline"
+                >
+                  {resultsId === session.id ? 'Hide results' : 'Results'}
+                </button>
+              </div>
+
+              {pollsId === session.id && (
+                <div className="mt-3">
+                  <SessionPolls sessionId={session.id} onChanged={() => void refresh()} />
+                </div>
+              )}
+              {codeId === session.id && (
                 <div className="mt-3">
                   <SessionQrCode code={session.session_code} />
                 </div>
