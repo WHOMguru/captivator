@@ -1,0 +1,2 @@
+-- Supabase seed data. Populated as tables arrive (Sprint 1 onward).
+-- Run with: supabase db reset (applies migrations, then this seed).

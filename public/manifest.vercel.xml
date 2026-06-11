@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Captivator PowerPoint add-in manifest.
+
+  Office requires HTTPS for every URL referenced here. For local dev the
+  default below points at https://captivator.vercel.app (served by
+  `pnpm dev`, which runs Next with --experimental-https). For preview or
+  production, replace every https://captivator.vercel.app occurrence with your
+  deployed origin and re-side-load. PowerPoint caches manifests aggressively,
+  so remove and re-add the add-in after any change.
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <Id>3a2b6c10-7d44-4f0a-9b2e-captivator001</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>WHOM</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Captivator" />
+  <Description DefaultValue="PowerPoint-native audience engagement and facilitation." />
+  <IconUrl DefaultValue="https://captivator.vercel.app/assets/icons/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://captivator.vercel.app/assets/icons/icon-80.png" />
+  <SupportUrl DefaultValue="https://captivator.vercel.app" />
+
+  <AppDomains>
+    <AppDomain>https://captivator.vercel.app</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Presentation" />
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://captivator.vercel.app/addin" />
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides
+    xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+    xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Presentation">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="Captivator.GetStarted.Title" />
+            <Description resid="Captivator.GetStarted.Description" />
+            <LearnMoreUrl resid="Captivator.Url" />
+          </GetStarted>
+
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <CustomTab id="Captivator.Tab">
+              <Group id="Captivator.Group">
+                <Label resid="Captivator.Group.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Captivator.Icon16" />
+                  <bt:Image size="32" resid="Captivator.Icon32" />
+                  <bt:Image size="80" resid="Captivator.Icon80" />
+                </Icon>
+                <Control xsi:type="Button" id="Captivator.OpenTaskPane">
+                  <Label resid="Captivator.OpenTaskPane.Label" />
+                  <Supertip>
+                    <Title resid="Captivator.OpenTaskPane.Label" />
+                    <Description resid="Captivator.OpenTaskPane.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Captivator.Icon16" />
+                    <bt:Image size="32" resid="Captivator.Icon32" />
+                    <bt:Image size="80" resid="Captivator.Icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>Captivator.Taskpane</TaskpaneId>
+                    <SourceLocation resid="Captivator.Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+              <Label resid="Captivator.Tab.Label" />
+            </CustomTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Captivator.Icon16" DefaultValue="https://captivator.vercel.app/assets/icons/icon-16.png" />
+        <bt:Image id="Captivator.Icon32" DefaultValue="https://captivator.vercel.app/assets/icons/icon-32.png" />
+        <bt:Image id="Captivator.Icon80" DefaultValue="https://captivator.vercel.app/assets/icons/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Captivator.Url" DefaultValue="https://captivator.vercel.app" />
+        <bt:Url id="Captivator.Taskpane.Url" DefaultValue="https://captivator.vercel.app/addin" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Captivator.Tab.Label" DefaultValue="Captivator" />
+        <bt:String id="Captivator.Group.Label" DefaultValue="Captivator" />
+        <bt:String id="Captivator.OpenTaskPane.Label" DefaultValue="Open Task Pane" />
+        <bt:String id="Captivator.GetStarted.Title" DefaultValue="Captivator is ready." />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Captivator.OpenTaskPane.Tooltip" DefaultValue="Open the Captivator task pane to author polls and run sessions." />
+        <bt:String id="Captivator.GetStarted.Description" DefaultValue="Open the Captivator task pane from the Captivator ribbon tab." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
