@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import { PollAuthoring } from '@/components/polls/PollAuthoring';
 import { loadOffice } from '@/lib/office/loader';
+import { getSelectedSlide } from '@/lib/office/slide';
 import { createClient } from '@/lib/supabase/client';
 
 import { StatusPill, type ConnectionState } from './components/status-pill';
@@ -54,8 +56,11 @@ export default function AddinPage() {
         <StatusPill label={`Office.js: ${officeState}`} state={officeState} />
       </section>
 
-      <section className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
-        Sprint 0 shell. Poll authoring arrives in Sprint 1.
+      <section>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Polls</h2>
+        {/* getSelectedSlide reads the PowerPoint selection; passing it here keeps
+            Office.js imports inside the /addin tree. */}
+        <PollAuthoring onPickSlide={getSelectedSlide} />
       </section>
     </main>
   );
