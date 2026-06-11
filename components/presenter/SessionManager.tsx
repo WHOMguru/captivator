@@ -39,6 +39,7 @@ export function SessionManager() {
   const [codeId, setCodeId] = useState<string | null>(null);
   const [resultsId, setResultsId] = useState<string | null>(null);
   const [pollsId, setPollsId] = useState<string | null>(null);
+  const [debug, setDebug] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await authedFetch('/api/sessions');
@@ -80,18 +81,28 @@ export function SessionManager() {
   const startSession = async () => {
     setBusy(true);
     setError(null);
+    setDebug('Creating…');
     try {
       const res = await authedFetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
+      const bodyText = await res.text();
+      setDebug(`POST /api/sessions → ${res.status}\n${bodyText.slice(0, 300)}`);
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(body?.error ?? 'Could not create the session.');
+        const parsed = (() => {
+          try {
+            return JSON.parse(bodyText) as { error?: string };
+          } catch {
+            return null;
+          }
+        })();
+        throw new Error(parsed?.error ?? `HTTP ${res.status}`);
       }
-      const created = (await res.json()) as { id: string };
+      const created = JSON.parse(bodyText) as { id: string };
       await refresh();
+      setDebug((d) => `${d ?? ''}\nlist refreshed`);
       // Open the new session's poll picker so the facilitator can fill it.
       setPollsId(created.id);
     } catch (e) {
@@ -144,6 +155,11 @@ export function SessionManager() {
         + New session
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {debug && (
+        <pre className="whitespace-pre-wrap break-all rounded bg-slate-100 p-2 text-[11px] leading-snug text-slate-600">
+          {debug}
+        </pre>
+      )}
 
       {sessions.length === 0 ? (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
