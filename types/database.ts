@@ -6,6 +6,10 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type QuestionType = 'multiple_choice' | 'word_cloud' | 'open_text' | 'ranking';
 
+export type SessionStatus = 'draft' | 'active' | 'ended';
+
+export type PollState = 'pending' | 'open' | 'closed';
+
 export type Database = {
   public: {
     Tables: {
@@ -104,11 +108,101 @@ export type Database = {
           },
         ];
       };
+      sessions: {
+        Row: {
+          id: string;
+          workshop_id: string;
+          session_code: string;
+          status: SessionStatus;
+          started_at: string | null;
+          ended_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workshop_id: string;
+          session_code: string;
+          status?: SessionStatus;
+          started_at?: string | null;
+          ended_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          workshop_id?: string;
+          session_code?: string;
+          status?: SessionStatus;
+          started_at?: string | null;
+          ended_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sessions_workshop_id_fkey';
+            columns: ['workshop_id'];
+            referencedRelation: 'workshops';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      session_questions: {
+        Row: {
+          id: string;
+          session_id: string;
+          question_id: string;
+          launch_order: number;
+          poll_state: PollState;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          question_id: string;
+          launch_order?: number;
+          poll_state?: PollState;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          question_id?: string;
+          launch_order?: number;
+          poll_state?: PollState;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'session_questions_session_id_fkey';
+            columns: ['session_id'];
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'session_questions_question_id_fkey';
+            columns: ['question_id'];
+            referencedRelation: 'questions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      check_session_code: {
+        Args: { code: string };
+        Returns: { id: string; status: SessionStatus }[];
+      };
+    };
     Enums: {
       question_type: QuestionType;
+      session_status: SessionStatus;
+      poll_state: PollState;
     };
     CompositeTypes: Record<string, never>;
   };

@@ -40,6 +40,15 @@ Scope:
 
 ## Verification still owed (blocked by the sandbox network allowlist)
 
+Sprint 1:
+
 - Live create/read/update/delete of each question type against Supabase.
 - Confirm RLS blocks cross-facilitator reads.
 - Confirm `slide_links` is written when a slide is selected in PowerPoint.
+
+Sprint 2:
+
+- Create a session; confirm `session_code` is unique and 6 chars.
+- Scan the QR; confirm it resolves to `/join/[code]` (404 expected until Sprint 3).
+- Start then end a session; confirm `status` transitions draft → active → ended.
+- Confirm `check_session_code` returns a row only for an active code (anon role).
