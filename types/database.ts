@@ -191,6 +191,83 @@ export type Database = {
           },
         ];
       };
+      participants: {
+        Row: {
+          id: string;
+          session_id: string;
+          display_name: string | null;
+          joined_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          display_name?: string | null;
+          joined_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          display_name?: string | null;
+          joined_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'participants_session_id_fkey';
+            columns: ['session_id'];
+            referencedRelation: 'sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      responses: {
+        Row: {
+          id: string;
+          session_question_id: string;
+          participant_id: string;
+          payload: Json;
+          submitted_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_question_id: string;
+          participant_id: string;
+          payload?: Json;
+          submitted_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_question_id?: string;
+          participant_id?: string;
+          payload?: Json;
+          submitted_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'responses_session_question_id_fkey';
+            columns: ['session_question_id'];
+            referencedRelation: 'session_questions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'responses_participant_id_fkey';
+            columns: ['participant_id'];
+            referencedRelation: 'participants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

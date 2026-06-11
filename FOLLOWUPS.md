@@ -49,6 +49,15 @@ Sprint 1:
 Sprint 2:
 
 - Create a session; confirm `session_code` is unique and 6 chars.
-- Scan the QR; confirm it resolves to `/join/[code]` (404 expected until Sprint 3).
+- Scan the QR; confirm it resolves to `/join/[code]`.
 - Start then end a session; confirm `status` transitions draft → active → ended.
 - Confirm `check_session_code` returns a row only for an active code (anon role).
+
+Sprint 3:
+
+- Join from a phone; submit one response of each type; confirm rows in `responses`.
+- Load test ~50 concurrent submissions (k6/autocannon) against `/api/responses`.
+- Confirm a participant cannot submit to a non-active session (409) or without the
+  join cookie (401).
+- Requires `SUPABASE_SERVICE_ROLE_KEY` set in the deployment (participant flows
+  use the service-role admin client server-side).
