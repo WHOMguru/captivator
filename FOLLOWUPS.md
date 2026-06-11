@@ -5,11 +5,12 @@ into a sprint when they're scheduled.
 
 ## Deferred verification
 
-### PowerPoint add-in sideload — DEFERRED
+### PowerPoint add-in sideload — SCHEDULED (between Sprint 6 and Sprint 7)
 
 Verifying the add-in inside the PowerPoint desktop host (side-loading
 `public/manifest.xml`, the ribbon button, the task pane, slide-change tracking,
-and the full Launch → Close → Reveal → Hide cycle) is **deferred**. Reasons:
+and the full Launch → Close → Reveal → Hide cycle) can't be done on our own
+tenant. Reasons:
 
 - **Tenant/policy restrictions** block add-in side-loading on the primary user's
   machine.
@@ -17,15 +18,40 @@ and the full Launch → Close → Reveal → Hide cycle) is **deferred**. Reason
   for a developer sandbox tenant, so we can't provision an unrestricted
   environment to test in.
 
-Impact: all Office.js-dependent acceptance checks (Sprint 0 task-pane render,
-Sprint 1 slide linking, Sprint 5 slide-change + presenter controls) remain
-unverified in a real host. The code paths are exercised via build/typecheck and,
-where possible, the browser-mode fallbacks; they are isolated behind
-`lib/office/*` and injected as props, so the rest of the app is unaffected.
+**Resolution: a contracted Office add-in developer runs the host verification on
+their own (unrestricted) tenant.** Scheduled as a hard gate between Sprint 6 and
+Sprint 7 so it can't keep slipping.
 
-Unblock options: an admin-approved deployment of the manifest via the Microsoft
-365 admin center, a different tenant without the side-load policy, or
-distribution through AppSource.
+**Owner:** external contracted Office add-in developer.
+**Gate:** Sprint 7 (Reporting) does not start until this verification is signed
+off or explicitly waived in writing here. It runs alongside Sprint 6.5
+(Facilitator Authentication) in the Sprint 6 → Sprint 7 window.
+
+**Timeline** (anchored to T0 = Sprint 6 merged, in business days, so it stays
+pinned even if calendar dates move):
+
+| When | Milestone | Owner |
+|---|---|---|
+| T0 | Sprint 6 merges → engage contractor; hand over manifest, production URL, a test deck, and this checklist | us |
+| T0 + 3 | Contractor provisions an unrestricted M365 tenant and side-loads the manifest | contractor |
+| T0 + 5 | Host verification run (checklist below); issues filed as GitHub issues | contractor |
+| T0 + 7 | Fixes (if any) landed and re-verified | us + contractor |
+| T0 + 8 | Signed-off verification report attached here; gate lifted → Sprint 7 may start | us |
+
+If any milestone slips, note the reason and a new date in this section the same
+day — do not let it pass silently.
+
+**Verification checklist (real host):**
+
+- Sprint 0 — ribbon tab + "Open Task Pane" button appear; task pane renders; the
+  Supabase status pill turns green.
+- Sprint 1 — "Link current slide" captures the selected slide id; slide_links rows
+  are written.
+- Sprint 5 — advancing slides moves the presenter context; full Launch → Close →
+  Reveal → Hide cycle works without leaving PowerPoint.
+
+**Exit criteria:** all checklist items pass (or are waived in writing here), the
+report is linked, and the Sprint 7 gate is explicitly lifted above.
 
 ## Scheduled sprint insertions
 
