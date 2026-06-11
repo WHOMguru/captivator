@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
 
 import { createSessionSchema, generateSessionCode } from '@/lib/schemas/session';
-import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/supabase/request-auth';
 import { getOrCreateDefaultWorkshopId } from '@/lib/workshops';
 
 const MAX_CODE_ATTEMPTS = 6;
 
 // GET /api/sessions — the facilitator's sessions, newest first, with a question count.
-export async function GET() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request: Request) {
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
@@ -41,12 +38,9 @@ export async function GET() {
 
 // POST /api/sessions — create a draft session from selected questions.
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
@@ -58,7 +52,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const workshopId = await getOrCreateDefaultWorkshopId(supabase, user.id);
+  const workshopId = await getOrCreateDefaultWorkshopId(supabase, userId);
 
   // Keep only questions that actually belong to this facilitator's workshop,
   // preserving the requested order.

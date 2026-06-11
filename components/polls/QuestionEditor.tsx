@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 
+import { authedFetch } from '@/lib/api';
 import {
   DEFAULT_QUESTION_FORM,
   questionFormSchema,
@@ -68,7 +69,7 @@ export function QuestionEditor({
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
     const payload = toCreatePayload(values);
-    const res = await fetch(questionId ? `/api/questions/${questionId}` : '/api/questions', {
+    const res = await authedFetch(questionId ? `/api/questions/${questionId}` : '/api/questions', {
       method: questionId ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

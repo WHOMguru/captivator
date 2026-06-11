@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { authedFetch } from '@/lib/api';
 import { ensureSession } from '@/lib/supabase/ensure-session';
 import { toFormValues, type QuestionFormValues } from '@/lib/schemas/question';
 
@@ -21,7 +22,7 @@ export function PollAuthoring({ onPickSlide }: { onPickSlide?: PickSlide }) {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch('/api/questions');
+    const res = await authedFetch('/api/questions');
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
       throw new Error(body?.error ?? 'Could not load questions.');
@@ -64,7 +65,7 @@ export function PollAuthoring({ onPickSlide }: { onPickSlide?: PickSlide }) {
 
   const handleDelete = async (id: string) => {
     setQuestions((qs) => qs.filter((q) => q.id !== id));
-    await fetch(`/api/questions/${id}`, { method: 'DELETE' }).catch(() => undefined);
+    await authedFetch(`/api/questions/${id}`, { method: 'DELETE' }).catch(() => undefined);
     await refresh().catch(() => undefined);
   };
 

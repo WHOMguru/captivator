@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { authedFetch } from '@/lib/api';
 import { ensureSession } from '@/lib/supabase/ensure-session';
 import { cn } from '@/lib/utils';
 import type { SessionStatus } from '@/types/database';
@@ -42,7 +43,7 @@ export function SessionManager() {
   const [resultsId, setResultsId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch('/api/sessions');
+    const res = await authedFetch('/api/sessions');
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
       throw new Error(body?.error ?? 'Could not load sessions.');
@@ -81,7 +82,7 @@ export function SessionManager() {
   const openLauncher = async () => {
     setLauncherOpen(true);
     setSelected([]);
-    const res = await fetch('/api/questions');
+    const res = await authedFetch('/api/questions');
     if (res.ok) {
       const body = (await res.json()) as { questions: QuestionOption[] };
       setQuestions(body.questions);
@@ -95,7 +96,7 @@ export function SessionManager() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch('/api/sessions', {
+      const res = await authedFetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ questionIds: selected }),
@@ -118,7 +119,7 @@ export function SessionManager() {
   const transition = async (id: string, action: 'start' | 'end') => {
     setBusy(true);
     try {
-      await fetch(`/api/sessions/${id}/${action}`, { method: 'PATCH' });
+      await authedFetch(`/api/sessions/${id}/${action}`, { method: 'PATCH' });
       await refresh();
       if (action === 'start') setExpandedId(id);
     } finally {
