@@ -3,19 +3,32 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ResponseForm } from '@/components/polls/respond/ResponseForm';
+import { LiveResultsLite } from '@/components/results/LiveResultsLite';
 import type { QuestionType } from '@/lib/schemas/question';
+import type { FeedEntry, Tally } from '@/lib/results/aggregate';
 import type { SessionStatus } from '@/types/database';
 
-type CurrentQuestion = {
+type OpenQuestion = {
   sessionQuestionId: string;
-  pollState: string;
   type: QuestionType;
   prompt: string;
   config: unknown;
   answered: boolean;
 };
 
-type CurrentData = { status: SessionStatus; questions: CurrentQuestion[] };
+type RevealedResult = {
+  sessionQuestionId: string;
+  type: QuestionType;
+  prompt: string;
+  tally?: Tally[];
+  feed?: FeedEntry[];
+};
+
+type CurrentData = {
+  status: SessionStatus;
+  open: OpenQuestion | null;
+  revealed: RevealedResult[];
+};
 
 const POLL_MS = 4000;
 
@@ -42,7 +55,8 @@ export function ParticipantSession({ sessionId }: { sessionId: string }) {
 
   useEffect(() => {
     void load();
-    // Sprint 4 replaces this poll with a realtime subscription.
+    // Sprint 4 added Realtime for the facilitator; the participant view stays on
+    // a light poll, which also picks up poll-state/reveal changes from Sprint 5.
     const timer = setInterval(() => void load(), POLL_MS);
     return () => clearInterval(timer);
   }, [load]);
@@ -66,23 +80,34 @@ export function ParticipantSession({ sessionId }: { sessionId: string }) {
     );
   }
 
-  if (data.questions.length === 0) {
-    return <p className="text-center text-slate-600">No questions yet — hang tight.</p>;
-  }
+  const idle = !data.open && data.revealed.length === 0;
 
   return (
     <div className="space-y-4">
-      {data.questions.map((q) => (
+      {data.open && (
         <ResponseForm
-          key={q.sessionQuestionId}
-          sessionQuestionId={q.sessionQuestionId}
-          type={q.type}
-          prompt={q.prompt}
-          config={q.config}
-          answered={q.answered}
+          key={data.open.sessionQuestionId}
+          sessionQuestionId={data.open.sessionQuestionId}
+          type={data.open.type}
+          prompt={data.open.prompt}
+          config={data.open.config}
+          answered={data.open.answered}
           onAnswered={() => void load()}
         />
+      )}
+
+      {data.revealed.map((r) => (
+        <LiveResultsLite
+          key={r.sessionQuestionId}
+          prompt={r.prompt}
+          tally={r.tally}
+          feed={r.feed}
+        />
       ))}
+
+      {idle && (
+        <p className="text-center text-slate-600">Waiting for the facilitator to open a poll…</p>
+      )}
     </div>
   );
 }

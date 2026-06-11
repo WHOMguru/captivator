@@ -35,3 +35,31 @@ export async function getSelectedSlide(): Promise<SlideSelection | null> {
     return { slideId: first.id, deckId };
   }).catch(() => null);
 }
+
+/**
+ * Subscribes to PowerPoint selection changes (which fire when the user moves to
+ * a different slide) and invokes `onChange` with the newly selected slide.
+ * Returns an unsubscribe function. No-ops outside the PowerPoint host.
+ */
+export async function subscribeToSlideChange(
+  onChange: (selection: SlideSelection | null) => void,
+): Promise<() => void> {
+  await loadOffice();
+
+  const doc = window.Office?.context?.document;
+  if (!doc) {
+    return () => undefined;
+  }
+
+  const handler = () => {
+    void getSelectedSlide().then(onChange);
+  };
+
+  doc.addHandlerAsync(window.Office!.EventType.DocumentSelectionChanged, handler);
+
+  return () => {
+    doc.removeHandlerAsync(window.Office!.EventType.DocumentSelectionChanged, {
+      handler,
+    });
+  };
+}

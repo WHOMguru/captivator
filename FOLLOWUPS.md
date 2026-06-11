@@ -70,3 +70,12 @@ Sprint 4:
 - Requires Realtime enabled: migration `0004` adds `responses` to the
   `supabase_realtime` publication. Confirm the facilitator only receives
   responses for their own sessions (RLS on the Realtime subscription).
+
+Sprint 5:
+
+- In PowerPoint, advance slides and confirm the task pane follows the linked
+  question (slide-change handler).
+- Run a full Launch → Close → Reveal → Hide cycle without leaving PowerPoint.
+- Confirm Launch opens exactly one question (others close) and the participant
+  view follows the open question; Reveal shows results to participants.
+- Slide-change + four controls can only be exercised inside the PowerPoint host.

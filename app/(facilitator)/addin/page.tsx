@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { PollAuthoring } from '@/components/polls/PollAuthoring';
+import { PresenterDashboard } from '@/components/presenter/PresenterDashboard';
 import { SessionManager } from '@/components/presenter/SessionManager';
 import { loadOffice } from '@/lib/office/loader';
-import { getSelectedSlide } from '@/lib/office/slide';
+import { getSelectedSlide, subscribeToSlideChange } from '@/lib/office/slide';
 import { createClient } from '@/lib/supabase/client';
 
 import { StatusPill, type ConnectionState } from './components/status-pill';
@@ -62,6 +63,23 @@ export default function AddinPage() {
         {/* getSelectedSlide reads the PowerPoint selection; passing it here keeps
             Office.js imports inside the /addin tree. */}
         <PollAuthoring onPickSlide={getSelectedSlide} />
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Present
+        </h2>
+        {/* Office slide helpers are injected here so the shared presenter
+            component never imports lib/office/* directly. */}
+        <PresenterDashboard
+          getCurrentSlide={async () => {
+            const slide = await getSelectedSlide();
+            return slide ? { slideId: slide.slideId } : null;
+          }}
+          subscribeSlide={(onChange) =>
+            subscribeToSlideChange((slide) => onChange(slide ? slide.slideId : null))
+          }
+        />
       </section>
 
       <section>
