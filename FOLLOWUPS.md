@@ -3,13 +3,31 @@
 Deferred items surfaced during sprint work. Keep this list short; promote items
 into a sprint when they're scheduled.
 
+## Scheduled sprint insertions
+
+### Sprint 6.5 — Facilitator Authentication (before Sprint 7)
+
+Replace the temporary anonymous-session bootstrap with a real facilitator
+sign-in. Runs after Sprint 6 (AI Insights) and before Sprint 7 (Reporting), so
+exports and the session archive are tied to authenticated facilitator accounts.
+
+Scope:
+
+- Email (magic-link) and/or OAuth sign-in via Supabase Auth + `@supabase/ssr`.
+- Sign-in / sign-out UI on `/addin` and `/dashboard`; gate authoring and
+  sessions behind an authenticated user.
+- Migrate any data created under anonymous sessions, or require sign-in before
+  first authoring.
+- Remove `lib/supabase/ensure-session.ts` (the anonymous bootstrap) once real
+  auth lands; keep RLS unchanged (`owner_id = auth.uid()` still holds).
+
 ## From Sprint 1 (Poll Authoring)
 
 - **Facilitator auth is a temporary anonymous bootstrap.** `lib/supabase/ensure-session.ts`
   signs the facilitator in anonymously so RLS (`owner_id = auth.uid()`) works,
   because the sprint sequence has no login surface yet. This requires **Anonymous
-  sign-ins** to be enabled in Supabase (Authentication → Providers). Replace with
-  a real facilitator sign-in (email/OAuth) before V1 ship.
+  sign-ins** to be enabled in Supabase (Authentication → Providers). Replaced by
+  Sprint 6.5 (above) before V1 ship.
 - **Single implicit workshop per facilitator.** `getOrCreateDefaultWorkshopId`
   creates one "My Workshop" per user. A real workshop selector / multi-workshop
   UI arrives with the Facilitator OS (Sprint 8).
