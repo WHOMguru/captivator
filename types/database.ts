@@ -155,6 +155,7 @@ export type Database = {
           question_id: string;
           launch_order: number;
           poll_state: PollState;
+          results_revealed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -164,6 +165,7 @@ export type Database = {
           question_id: string;
           launch_order?: number;
           poll_state?: PollState;
+          results_revealed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -173,6 +175,7 @@ export type Database = {
           question_id?: string;
           launch_order?: number;
           poll_state?: PollState;
+          results_revealed?: boolean;
           created_at?: string;
           updated_at?: string;
         };

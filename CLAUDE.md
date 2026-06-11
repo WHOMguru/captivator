@@ -128,7 +128,7 @@ All nine sprints (0 through 8) are V1 scope. Reporting and the Facilitator OS ar
 | 1 | Poll Authoring | ☑ | Create MC, Word Cloud, Open Text, Ranking questions linked to slides |
 | 2 | Session Management | ☑ | Create sessions, generate codes and QR, lifecycle states |
 | 3 | Participant Experience | ☑ | Mobile join + submit, 50 concurrent users, no Office.js in bundle |
-| 4 | Live Results | ☐ | Realtime visualizations with sub-second latency |
+| 4 | Live Results | ☑ | Realtime visualizations with sub-second latency |
 | 5 | Presentation Controls | ☐ | Launch / Close / Reveal / Hide from PowerPoint, no browser switching |
 | 6 | AI Insights | ☐ | Themes, sentiment, summary, prompts in under 10s for 100 responses |
 | 7 | Reporting | ☐ | One-click PDF + CSV exports, session archive |
@@ -136,7 +136,7 @@ All nine sprints (0 through 8) are V1 scope. Reporting and the Facilitator OS ar
 
 **Mark sprints complete here as they merge.** Update the box (`☐` → `☑`) and add the merge date in a comment. This file is the running ledger.
 
-<!-- Merge log: Sprint 0 (PR #1), Sprint 1 (PR #3), Sprint 2 (PR #4), Sprint 3 (PR #5) — all merged 2026-06-11. -->
+<!-- Merge log: Sprint 0 (PR #1), Sprint 1 (PR #3), Sprint 2 (PR #4), Sprint 3 (PR #5), Sprint 4 (PR #6) — all merged 2026-06-11. -->
 
 > Scheduled insertion: **Sprint 6.5 — Facilitator Authentication** runs after Sprint 6 and before Sprint 7. See `FOLLOWUPS.md`.
 
