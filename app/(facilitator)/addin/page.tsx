@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { PollAuthoring } from '@/components/polls/PollAuthoring';
+import { SessionManager } from '@/components/presenter/SessionManager';
 import { loadOffice } from '@/lib/office/loader';
 import { getSelectedSlide } from '@/lib/office/slide';
 import { createClient } from '@/lib/supabase/client';
@@ -61,6 +62,13 @@ export default function AddinPage() {
         {/* getSelectedSlide reads the PowerPoint selection; passing it here keeps
             Office.js imports inside the /addin tree. */}
         <PollAuthoring onPickSlide={getSelectedSlide} />
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Sessions
+        </h2>
+        <SessionManager />
       </section>
     </main>
   );

@@ -124,8 +124,8 @@ All nine sprints (0 through 8) are V1 scope. Reporting and the Facilitator OS ar
 
 | # | Name | Status | Goal |
 |---|---|---|---|
-| 0 | Foundation & Task Pane Shell | ☐ | Next.js bootstrapped, `/addin` loads in PowerPoint via side-loaded manifest |
-| 1 | Poll Authoring | ☐ | Create MC, Word Cloud, Open Text, Ranking questions linked to slides |
+| 0 | Foundation & Task Pane Shell | ☑ | Next.js bootstrapped, `/addin` loads in PowerPoint via side-loaded manifest |
+| 1 | Poll Authoring | ☑ | Create MC, Word Cloud, Open Text, Ranking questions linked to slides |
 | 2 | Session Management | ☐ | Create sessions, generate codes and QR, lifecycle states |
 | 3 | Participant Experience | ☐ | Mobile join + submit, 50 concurrent users, no Office.js in bundle |
 | 4 | Live Results | ☐ | Realtime visualizations with sub-second latency |
@@ -135,6 +135,10 @@ All nine sprints (0 through 8) are V1 scope. Reporting and the Facilitator OS ar
 | 8 | Facilitator Operating System | ☐ | Templates, discussion library, action items, facilitator notes |
 
 **Mark sprints complete here as they merge.** Update the box (`☐` → `☑`) and add the merge date in a comment. This file is the running ledger.
+
+<!-- Merge log: Sprint 0 merged 2026-06-11 (PR #1). Sprint 1 merged 2026-06-11 (PR #3). -->
+
+> Scheduled insertion: **Sprint 6.5 — Facilitator Authentication** runs after Sprint 6 and before Sprint 7. See `FOLLOWUPS.md`.
 
 ---
 
