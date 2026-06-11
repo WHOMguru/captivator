@@ -5,15 +5,19 @@ import { useEffect, useState } from 'react';
 import { PollAuthoring } from '@/components/polls/PollAuthoring';
 import { PresenterDashboard } from '@/components/presenter/PresenterDashboard';
 import { SessionManager } from '@/components/presenter/SessionManager';
+import { authedFetch } from '@/lib/api';
 import { loadOffice } from '@/lib/office/loader';
 import { getSelectedSlide, subscribeToSlideChange } from '@/lib/office/slide';
 import { createClient } from '@/lib/supabase/client';
+import { getAccessToken } from '@/lib/supabase/ensure-session';
 
 import { StatusPill, type ConnectionState } from './components/status-pill';
 
 export default function AddinPage() {
   const [supabaseState, setSupabaseState] = useState<ConnectionState>('connecting');
   const [officeState, setOfficeState] = useState<ConnectionState>('connecting');
+  const [authState, setAuthState] = useState<ConnectionState>('connecting');
+  const [authLabel, setAuthLabel] = useState('Auth: …');
 
   useEffect(() => {
     let active = true;
@@ -36,6 +40,35 @@ export default function AddinPage() {
       .then(() => active && setOfficeState('connected'))
       .catch(() => active && setOfficeState('error'));
 
+    // Auth diagnostic: runs the full client→server handshake so we can see
+    // exactly where facilitator auth breaks inside the add-in webview.
+    (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!active) return;
+        if (!token) {
+          setAuthState('error');
+          setAuthLabel('Auth: no token (sign-in failed)');
+          return;
+        }
+        const res = await authedFetch('/api/whoami');
+        const body = (await res.json().catch(() => null)) as { userId?: string | null } | null;
+        if (!active) return;
+        if (body?.userId) {
+          setAuthState('connected');
+          setAuthLabel(`Auth: ${body.userId.slice(0, 8)}`);
+        } else {
+          setAuthState('error');
+          setAuthLabel('Auth: token sent, server 401');
+        }
+      } catch {
+        if (active) {
+          setAuthState('error');
+          setAuthLabel('Auth: request failed');
+        }
+      }
+    })();
+
     return () => {
       active = false;
     };
@@ -56,6 +89,7 @@ export default function AddinPage() {
       <section className="flex flex-wrap gap-2">
         <StatusPill label={`Supabase: ${supabaseState}`} state={supabaseState} />
         <StatusPill label={`Office.js: ${officeState}`} state={officeState} />
+        <StatusPill label={authLabel} state={authState} />
       </section>
 
       <section>
