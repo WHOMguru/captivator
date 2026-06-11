@@ -3,6 +3,30 @@
 Deferred items surfaced during sprint work. Keep this list short; promote items
 into a sprint when they're scheduled.
 
+## Deferred verification
+
+### PowerPoint add-in sideload — DEFERRED
+
+Verifying the add-in inside the PowerPoint desktop host (side-loading
+`public/manifest.xml`, the ribbon button, the task pane, slide-change tracking,
+and the full Launch → Close → Reveal → Hide cycle) is **deferred**. Reasons:
+
+- **Tenant/policy restrictions** block add-in side-loading on the primary user's
+  machine.
+- The **Microsoft 365 Developer Program** is no longer accepting this account
+  for a developer sandbox tenant, so we can't provision an unrestricted
+  environment to test in.
+
+Impact: all Office.js-dependent acceptance checks (Sprint 0 task-pane render,
+Sprint 1 slide linking, Sprint 5 slide-change + presenter controls) remain
+unverified in a real host. The code paths are exercised via build/typecheck and,
+where possible, the browser-mode fallbacks; they are isolated behind
+`lib/office/*` and injected as props, so the rest of the app is unaffected.
+
+Unblock options: an admin-approved deployment of the manifest via the Microsoft
+365 admin center, a different tenant without the side-load policy, or
+distribution through AppSource.
+
 ## Scheduled sprint insertions
 
 ### Sprint 6.5 — Facilitator Authentication (before Sprint 7)
