@@ -1,3 +1,5 @@
+import type { Session } from '@supabase/supabase-js';
+
 import { createClient } from './client';
 
 // TEMPORARY facilitator-auth bootstrap.
@@ -10,19 +12,33 @@ import { createClient } from './client';
 // unreliable inside the Office add-in webview, so we don't depend on them.
 //
 // Requires "Anonymous sign-ins" enabled in Supabase (Authentication → Providers).
-export async function ensureSession(): Promise<string | null> {
+
+// De-dupe concurrent sign-ins: several components bootstrap on mount at once;
+// without this they'd each call signInAnonymously() and race, leaving some
+// callers without a token.
+let pending: Promise<Session | null> | null = null;
+
+async function currentSession(): Promise<Session | null> {
   const supabase = createClient();
 
   const { data } = await supabase.auth.getSession();
   if (data.session) {
-    return data.session.user.id;
+    return data.session;
   }
 
-  const { data: signedIn, error } = await supabase.auth.signInAnonymously();
-  if (error) {
-    return null;
+  if (!pending) {
+    pending = supabase.auth
+      .signInAnonymously()
+      .then(({ data: signedIn, error }) => (error ? null : signedIn.session));
   }
-  return signedIn.user?.id ?? null;
+  const session = await pending;
+  pending = null;
+  return session;
+}
+
+export async function ensureSession(): Promise<string | null> {
+  const session = await currentSession();
+  return session?.user.id ?? null;
 }
 
 /**
@@ -30,16 +46,6 @@ export async function ensureSession(): Promise<string | null> {
  * attach `Authorization: Bearer <token>` to API requests.
  */
 export async function getAccessToken(): Promise<string | null> {
-  const supabase = createClient();
-
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    return data.session.access_token;
-  }
-
-  const { data: signedIn, error } = await supabase.auth.signInAnonymously();
-  if (error) {
-    return null;
-  }
-  return signedIn.session?.access_token ?? null;
+  const session = await currentSession();
+  return session?.access_token ?? null;
 }
