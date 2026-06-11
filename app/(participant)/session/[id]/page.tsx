@@ -1,13 +1,16 @@
-// Active participant session view. Mobile-first, no Office.js. Wired up in
-// Sprint 3; realtime updates arrive in Sprint 4.
+import { ParticipantSession } from '@/components/participant/ParticipantSession';
+
+// Active participant session view. Mobile-first, no Office.js. Polls for the
+// session's questions (Sprint 4 swaps polling for a realtime subscription).
 export default function SessionPage({ params }: { params: { id: string } }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-6 text-center">
-      <h1 className="text-2xl font-bold text-slate-900">Session</h1>
-      <p className="text-sm text-slate-600">
-        Session ID: <span className="font-mono">{params.id}</span>
-      </p>
-      <p className="text-xs text-slate-400">Response components ship in Sprint 3.</p>
+    <main className="mx-auto min-h-screen max-w-md px-4 py-8">
+      <header className="mb-6 text-center">
+        <p className="text-sm font-semibold uppercase tracking-wide text-captivator-accent">
+          Captivator
+        </p>
+      </header>
+      <ParticipantSession sessionId={params.id} />
     </main>
   );
 }
