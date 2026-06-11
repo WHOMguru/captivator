@@ -6,6 +6,8 @@ import { ensureSession } from '@/lib/supabase/ensure-session';
 import { cn } from '@/lib/utils';
 import type { SessionStatus } from '@/types/database';
 
+import { SessionResults } from '@/components/results/SessionResults';
+
 import { SessionQrCode } from './SessionQrCode';
 import type { QuestionOption, SessionListItem } from './types';
 
@@ -37,6 +39,7 @@ export function SessionManager() {
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [resultsId, setResultsId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await fetch('/api/sessions');
@@ -247,11 +250,23 @@ export function SessionManager() {
                   >
                     {expandedId === session.id ? 'Hide code' : 'Show code'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setResultsId((id) => (id === session.id ? null : session.id))}
+                    className="font-medium text-slate-500 hover:underline"
+                  >
+                    {resultsId === session.id ? 'Hide results' : 'Results'}
+                  </button>
                 </div>
               </div>
               {expandedId === session.id && (
                 <div className="mt-3">
                   <SessionQrCode code={session.session_code} />
+                </div>
+              )}
+              {resultsId === session.id && (
+                <div className="mt-3">
+                  <SessionResults sessionId={session.id} />
                 </div>
               )}
             </li>

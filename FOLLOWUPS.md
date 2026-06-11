@@ -61,3 +61,12 @@ Sprint 3:
   join cookie (401).
 - Requires `SUPABASE_SERVICE_ROLE_KEY` set in the deployment (participant flows
   use the service-role admin client server-side).
+
+Sprint 4:
+
+- Open `/addin` (or `/dashboard`) and a participant tab; submit a response and
+  confirm the visualization updates in under 1 second (`console.time`).
+- Stress with ~50 rapid submissions; confirm charts keep up.
+- Requires Realtime enabled: migration `0004` adds `responses` to the
+  `supabase_realtime` publication. Confirm the facilitator only receives
+  responses for their own sessions (RLS on the Realtime subscription).
