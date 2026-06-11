@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
 
-import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/supabase/request-auth';
 
 // PATCH /api/sessions/[id]/start — move a session to active. RLS limits this to
 // the owning facilitator.
-export async function PATCH(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 

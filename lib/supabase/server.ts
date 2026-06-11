@@ -33,3 +33,25 @@ export function createClient() {
     },
   );
 }
+
+/**
+ * Server Supabase client authenticated by a Bearer access token instead of
+ * cookies. The token is applied to every PostgREST request, so RLS evaluates
+ * with the caller's `auth.uid()`. Used for facilitator API routes, which the
+ * add-in calls without usable cookies.
+ */
+export function createClientWithToken(accessToken: string) {
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {},
+      },
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    },
+  );
+}

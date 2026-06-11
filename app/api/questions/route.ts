@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
 
 import { createQuestionSchema } from '@/lib/schemas/question';
-import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/supabase/request-auth';
 import { getOrCreateDefaultWorkshopId } from '@/lib/workshops';
 import type { Json } from '@/types/database';
 
 // GET /api/questions — list the current facilitator's questions (with any
 // slide link) for their default workshop.
-export async function GET() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request: Request) {
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
-  const workshopId = await getOrCreateDefaultWorkshopId(supabase, user.id);
+  const workshopId = await getOrCreateDefaultWorkshopId(supabase, userId);
 
   const { data, error } = await supabase
     .from('questions')
@@ -35,12 +32,9 @@ export async function GET() {
 // POST /api/questions — create a question, plus a slide link when a slide was
 // selected in PowerPoint.
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
@@ -53,7 +47,7 @@ export async function POST(request: Request) {
   }
   const payload = parsed.data;
 
-  const workshopId = await getOrCreateDefaultWorkshopId(supabase, user.id);
+  const workshopId = await getOrCreateDefaultWorkshopId(supabase, userId);
 
   const { data: question, error: insertError } = await supabase
     .from('questions')

@@ -5,53 +5,38 @@ into a sprint when they're scheduled.
 
 ## Deferred verification
 
-### PowerPoint add-in sideload — SCHEDULED (between Sprint 6 and Sprint 7)
+### PowerPoint add-in sideload — RESOLVED (2026-06-11)
 
-Verifying the add-in inside the PowerPoint desktop host (side-loading
-`public/manifest.xml`, the ribbon button, the task pane, slide-change tracking,
-and the full Launch → Close → Reveal → Hide cycle) can't be done on our own
-tenant. Reasons:
+The host-verification blocker is **resolved**. The add-in side-loads on the
+primary user's machine after all, using the **Microsoft 365 Business Standard**
+tenant the user administers (the earlier tenant/policy restriction and the dead
+Developer-Program sandbox are no longer on the critical path). No contracted
+developer was needed.
 
-- **Tenant/policy restrictions** block add-in side-loading on the primary user's
-  machine.
-- The **Microsoft 365 Developer Program** is no longer accepting this account
-  for a developer sandbox tenant, so we can't provision an unrestricted
-  environment to test in.
+**How it was resolved (for future devs):**
 
-**Resolution: a contracted Office add-in developer runs the host verification on
-their own (unrestricted) tenant.** Scheduled as a hard gate between Sprint 6 and
-Sprint 7 so it can't keep slipping.
+- Side-load / deploy from a tenant you administer (Business Standard works). If a
+  machine-level sideload policy ever blocks it again, use **Centralized
+  Deployment**: M365 admin center → Settings → Integrated apps → Upload custom
+  apps → point at the deployed `public/manifest.xml` and assign to a test group.
+- For Centralized Deployment / AppSource the manifest `<Id>` must be a valid
+  GUID (the original placeholder was not — fix before distributing).
 
-**Owner:** external contracted Office add-in developer.
-**Gate:** Sprint 7 (Reporting) does not start until this verification is signed
-off or explicitly waived in writing here. It runs alongside Sprint 6.5
-(Facilitator Authentication) in the Sprint 6 → Sprint 7 window.
+**Verification status in the real host:**
 
-**Timeline** (anchored to T0 = Sprint 6 merged, in business days, so it stays
-pinned even if calendar dates move):
+- ✅ Sprint 0 — ribbon tab + task pane render; **Supabase and Office.js pills
+  both green**.
+- ✅ Sprint 5 — presenter controls render and the architecture works in-host.
+- ⏳ Sprint 1 — "Link current slide" / `slide_links`: confirm after the add-in
+  facilitator-auth fix ships (Bearer-token auth; see below).
 
-| When | Milestone | Owner |
-|---|---|---|
-| T0 | Sprint 6 merges → engage contractor; hand over manifest, production URL, a test deck, and this checklist | us |
-| T0 + 3 | Contractor provisions an unrestricted M365 tenant and side-loads the manifest | contractor |
-| T0 + 5 | Host verification run (checklist below); issues filed as GitHub issues | contractor |
-| T0 + 7 | Fixes (if any) landed and re-verified | us + contractor |
-| T0 + 8 | Signed-off verification report attached here; gate lifted → Sprint 7 may start | us |
-
-If any milestone slips, note the reason and a new date in this section the same
-day — do not let it pass silently.
-
-**Verification checklist (real host):**
-
-- Sprint 0 — ribbon tab + "Open Task Pane" button appear; task pane renders; the
-  Supabase status pill turns green.
-- Sprint 1 — "Link current slide" captures the selected slide id; slide_links rows
-  are written.
-- Sprint 5 — advancing slides moves the presenter context; full Launch → Close →
-  Reveal → Hide cycle works without leaving PowerPoint.
-
-**Exit criteria:** all checklist items pass (or are waived in writing here), the
-report is linked, and the Sprint 7 gate is explicitly lifted above.
+**Related follow-up (facilitator auth in the add-in):** the add-in webview drops
+cookies, so the facilitator API routes authenticate with the anonymous session's
+**Bearer access token** instead (`lib/api.ts` + `lib/supabase/request-auth.ts`).
+The anonymous session is in-memory only, so it does **not persist across task-pane
+reloads** — each reload mints a fresh anonymous user (and a fresh default
+workshop). Durable identity arrives with **Sprint 6.5 (Facilitator
+Authentication)**; until then, treat each task-pane load as a fresh facilitator.
 
 ## Scheduled sprint insertions
 

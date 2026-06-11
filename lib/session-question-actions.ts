@@ -3,6 +3,7 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/supabase/request-auth';
 import type { PollState } from '@/types/database';
 
 export type PollAction = 'launch' | 'close' | 'reveal' | 'hide';
@@ -56,13 +57,10 @@ async function apply(supabase: ServerClient, id: string, action: PollAction) {
 // Builds the PATCH handler for a presenter action route. RLS ensures only the
 // owning facilitator can change the row.
 export function makePollActionRoute(action: PollAction) {
-  return async function PATCH(_request: Request, { params }: { params: { id: string } }) {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  return async function PATCH(request: Request, { params }: { params: { id: string } }) {
+    const { supabase, userId } = await authenticateRequest(request);
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
     }
 

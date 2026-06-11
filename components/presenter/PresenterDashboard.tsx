@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ResultsPanel } from '@/components/results/ResultsPanel';
+import { authedFetch } from '@/lib/api';
 import type { QuestionType } from '@/lib/schemas/question';
 import { ensureSession } from '@/lib/supabase/ensure-session';
 import { createClient } from '@/lib/supabase/client';
@@ -105,7 +106,7 @@ export function PresenterDashboard({
     if (!selected || !session) return;
     setBusy(true);
     try {
-      await fetch(`/api/session-questions/${selected.sessionQuestionId}/${action}`, {
+      await authedFetch(`/api/session-questions/${selected.sessionQuestionId}/${action}`, {
         method: 'PATCH',
       });
       await fetchItems(session.id);

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createQuestionSchema } from '@/lib/schemas/question';
-import { createClient } from '@/lib/supabase/server';
+import { authenticateRequest } from '@/lib/supabase/request-auth';
 import type { Json } from '@/types/database';
 
 type RouteContext = { params: { id: string } };
@@ -9,12 +9,9 @@ type RouteContext = { params: { id: string } };
 // PATCH /api/questions/[id] — update a question and reconcile its slide link.
 // RLS guarantees the row belongs to the calling facilitator.
 export async function PATCH(request: Request, { params }: RouteContext) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
@@ -73,13 +70,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 }
 
 // DELETE /api/questions/[id] — remove a question (slide link cascades).
-export async function DELETE(_request: Request, { params }: RouteContext) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function DELETE(request: Request, { params }: RouteContext) {
+  const { supabase, userId } = await authenticateRequest(request);
 
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
   }
 
