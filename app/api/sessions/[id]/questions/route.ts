@@ -15,7 +15,9 @@ export async function GET(request: Request, { params }: RouteContext) {
 
   const { data, error } = await supabase
     .from('session_questions')
-    .select('id, question_id, launch_order, questions(prompt, type)')
+    .select(
+      'id, question_id, poll_state, results_revealed, launch_order, questions(prompt, type, config, slide_links(slide_id))',
+    )
     .eq('session_id', params.id)
     .order('launch_order', { ascending: true });
 
@@ -30,6 +32,10 @@ export async function GET(request: Request, { params }: RouteContext) {
       questionId: row.question_id,
       prompt: row.questions!.prompt,
       type: row.questions!.type,
+      config: row.questions!.config,
+      pollState: row.poll_state,
+      resultsRevealed: row.results_revealed,
+      slideIds: (row.questions!.slide_links ?? []).map((s) => s.slide_id),
     }));
 
   return NextResponse.json({ questions });

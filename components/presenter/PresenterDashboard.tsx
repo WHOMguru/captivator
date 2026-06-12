@@ -1,12 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { ResultsPanel } from '@/components/results/ResultsPanel';
 import { authedFetch } from '@/lib/api';
 import type { QuestionType } from '@/lib/schemas/question';
-import { ensureSession } from '@/lib/supabase/ensure-session';
-import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import type { PollState } from '@/types/database';
 
@@ -20,75 +18,73 @@ type Item = {
   slideIds: string[];
 };
 
+type ApiQuestion = {
+  sessionQuestionId: string;
+  prompt: string;
+  type: QuestionType;
+  config: unknown;
+  pollState: PollState;
+  resultsRevealed: boolean;
+  slideIds: string[];
+};
+
 export function PresenterDashboard({
   getCurrentSlide,
   subscribeSlide,
+  onInsertOnSlide,
 }: {
   getCurrentSlide?: () => Promise<{ slideId: string } | null>;
   subscribeSlide?: (onChange: (slideId: string | null) => void) => Promise<() => void>;
+  onInsertOnSlide?: (text: string) => Promise<void>;
 }) {
-  // Create the browser client lazily inside effects only — never during render,
-  // so static prerender (no env vars) doesn't try to construct it.
-  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
-  const getSupabase = useCallback(() => {
-    if (!supabaseRef.current) supabaseRef.current = createClient();
-    return supabaseRef.current;
-  }, []);
   const [phase, setPhase] = useState<'loading' | 'ready'>('loading');
   const [session, setSession] = useState<{ id: string; code: string } | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [currentSlideId, setCurrentSlideId] = useState<string | null>(null);
   const [manualId, setManualId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [inserted, setInserted] = useState(false);
 
-  const fetchItems = useCallback(
-    async (sessionId: string) => {
-      const { data } = await getSupabase()
-        .from('session_questions')
-        .select(
-          'id, poll_state, results_revealed, launch_order, questions(prompt, type, config, slide_links(slide_id))',
-        )
-        .eq('session_id', sessionId)
-        .order('launch_order', { ascending: true });
-      setItems(
-        (data ?? [])
-          .filter((row) => row.questions)
-          .map((row) => ({
-            sessionQuestionId: row.id,
-            prompt: row.questions!.prompt,
-            type: row.questions!.type,
-            config: row.questions!.config,
-            pollState: row.poll_state,
-            revealed: row.results_revealed,
-            slideIds: (row.questions!.slide_links ?? []).map((s) => s.slide_id),
-          })),
-      );
-    },
-    [getSupabase],
-  );
+  // Use the API routes (authedFetch) rather than direct browser queries — the
+  // same reliable path the rest of the facilitator UI uses.
+  const fetchItems = useCallback(async (sessionId: string) => {
+    const res = await authedFetch(`/api/sessions/${sessionId}/questions`);
+    if (!res.ok) return;
+    const body = (await res.json()) as { questions: ApiQuestion[] };
+    setItems(
+      body.questions.map((q) => ({
+        sessionQuestionId: q.sessionQuestionId,
+        prompt: q.prompt,
+        type: q.type,
+        config: q.config,
+        pollState: q.pollState,
+        revealed: q.resultsRevealed,
+        slideIds: q.slideIds,
+      })),
+    );
+  }, []);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      await ensureSession();
-      const { data } = await getSupabase()
-        .from('sessions')
-        .select('id, session_code')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const res = await authedFetch('/api/sessions');
       if (!active) return;
-      if (data) {
-        setSession({ id: data.id, code: data.session_code });
-        await fetchItems(data.id);
+      if (res.ok) {
+        const body = (await res.json()) as {
+          sessions: Array<{ id: string; session_code: string; status: string }>;
+        };
+        const live = body.sessions.find((s) => s.status === 'active');
+        if (live) {
+          setSession({ id: live.id, code: live.session_code });
+          await fetchItems(live.id);
+        }
       }
       setPhase('ready');
     })();
     return () => {
       active = false;
     };
-  }, [getSupabase, fetchItems]);
+  }, [fetchItems]);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -122,6 +118,20 @@ export function PresenterDashboard({
         method: 'PATCH',
       });
       await fetchItems(session.id);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const insertOnSlide = async () => {
+    if (!onInsertOnSlide || !selected || !session) return;
+    setBusy(true);
+    try {
+      const origin = window.location.origin;
+      const text = `${selected.prompt}\n\nJoin at ${origin}/join/${session.code}\nCode: ${session.code}`;
+      await onInsertOnSlide(text);
+      setInserted(true);
+      setTimeout(() => setInserted(false), 2500);
     } finally {
       setBusy(false);
     }
@@ -232,6 +242,17 @@ export function PresenterDashboard({
               Hide results
             </button>
           </div>
+
+          {onInsertOnSlide && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={insertOnSlide}
+              className="w-full rounded-md border border-captivator-accent px-3 py-2 text-sm font-medium text-captivator-accent disabled:opacity-40"
+            >
+              {inserted ? 'Inserted on slide ✓' : 'Insert poll on current slide'}
+            </button>
+          )}
 
           <ResultsPanel
             sessionQuestionId={selected.sessionQuestionId}
