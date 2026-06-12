@@ -39,6 +39,7 @@ export function SessionManager() {
   const [codeId, setCodeId] = useState<string | null>(null);
   const [resultsId, setResultsId] = useState<string | null>(null);
   const [pollsId, setPollsId] = useState<string | null>(null);
+  const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const res = await authedFetch('/api/sessions');
@@ -111,6 +112,24 @@ export function SessionManager() {
       await authedFetch(`/api/sessions/${id}/${action}`, { method: 'PATCH' });
       await refresh();
       if (action === 'start') setCodeId(id);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Testing helper: clear participants + responses and reset polls to pending,
+  // keeping the same active code. Two-click confirm to avoid accidents.
+  const resetSession = async (id: string) => {
+    if (confirmResetId !== id) {
+      setConfirmResetId(id);
+      setTimeout(() => setConfirmResetId((c) => (c === id ? null : c)), 4000);
+      return;
+    }
+    setConfirmResetId(null);
+    setBusy(true);
+    try {
+      await authedFetch(`/api/sessions/${id}/reset`, { method: 'POST' });
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -213,6 +232,18 @@ export function SessionManager() {
                   className="font-medium text-slate-500 hover:underline"
                 >
                   {resultsId === session.id ? 'Hide results' : 'Results'}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => resetSession(session.id)}
+                  className={cn(
+                    'ml-auto font-medium hover:underline',
+                    confirmResetId === session.id ? 'text-red-600' : 'text-slate-400',
+                  )}
+                  title="Clear participants and responses; reset polls. Keeps the same code."
+                >
+                  {confirmResetId === session.id ? 'Confirm reset' : 'Reset'}
                 </button>
               </div>
 
