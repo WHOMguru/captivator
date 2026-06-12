@@ -24,11 +24,18 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  // Session codes are stored uppercase; normalize the typed/scanned code.
+  // Codes are uppercase A–Z/0–9. Strip anything else (stray spaces, and notably
+  // zero-width characters that sneak in when a join link is copied rather than
+  // scanned) before matching.
+  const code = parsed.data.code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!code) {
+    return NextResponse.json({ error: 'Invalid join code.' }, { status: 400 });
+  }
+
   const { data: session, error } = await admin
     .from('sessions')
     .select('id, status')
-    .eq('session_code', parsed.data.code.toUpperCase())
+    .eq('session_code', code)
     .maybeSingle();
 
   if (error) {
