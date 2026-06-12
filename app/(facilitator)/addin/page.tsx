@@ -7,7 +7,11 @@ import { PresenterDashboard } from '@/components/presenter/PresenterDashboard';
 import { SessionManager } from '@/components/presenter/SessionManager';
 import { authedFetch } from '@/lib/api';
 import { loadOffice } from '@/lib/office/loader';
-import { getSelectedSlide, subscribeToSlideChange } from '@/lib/office/slide';
+import {
+  getSelectedSlide,
+  insertTextOnCurrentSlide,
+  subscribeToSlideChange,
+} from '@/lib/office/slide';
 import { createClient } from '@/lib/supabase/client';
 import { getAccessToken } from '@/lib/supabase/ensure-session';
 
@@ -121,6 +125,7 @@ export default function AddinPage() {
           subscribeSlide={(onChange) =>
             subscribeToSlideChange((slide) => onChange(slide ? slide.slideId : null))
           }
+          onInsertOnSlide={insertTextOnCurrentSlide}
         />
       </section>
     </main>

@@ -63,3 +63,32 @@ export async function subscribeToSlideChange(
     });
   };
 }
+
+/**
+ * Inserts a text box with the poll prompt + join instructions onto the currently
+ * selected slide, so the audience sees it on the projected deck. No-ops outside
+ * the PowerPoint host. (The JS API can't add images, so the QR stays in the task
+ * pane; the join URL + code go on the slide.)
+ */
+export async function insertTextOnCurrentSlide(text: string): Promise<void> {
+  await loadOffice();
+  if (typeof PowerPoint === 'undefined') return;
+
+  await PowerPoint.run(async (context) => {
+    const slides = context.presentation.getSelectedSlides();
+    slides.load('items');
+    await context.sync();
+
+    const slide = slides.items[0];
+    if (!slide) return;
+
+    const textBox = slide.shapes.addTextBox(text, {
+      left: 40,
+      top: 40,
+      width: 480,
+      height: 160,
+    });
+    textBox.name = 'Captivator Poll';
+    await context.sync();
+  });
+}
