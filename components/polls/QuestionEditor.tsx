@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 
 import { authedFetch } from '@/lib/api';
@@ -40,6 +40,23 @@ export function QuestionEditor({
   const options = watch('options');
   const slideId = watch('slideId');
   const usesOptions = type === 'multiple_choice' || type === 'ranking';
+
+  // For a new poll authored inside PowerPoint, capture the current slide up front
+  // so it links automatically (the facilitator can still clear it below).
+  useEffect(() => {
+    if (questionId || !onPickSlide) return;
+    let active = true;
+    void onPickSlide().then((picked) => {
+      if (!active || !picked) return;
+      setValue('slideId', picked.slideId);
+      setValue('deckId', picked.deckId ?? undefined);
+    });
+    return () => {
+      active = false;
+    };
+    // Run once on mount for a new question.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setOption = (index: number, value: string) => {
     const next = [...options];
