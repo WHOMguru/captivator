@@ -99,8 +99,20 @@ export function PresenterDashboard({
     return () => unsub?.();
   }, [getCurrentSlide, subscribeSlide]);
 
+  // Keep the poll list and states fresh so polls created while presenting (which
+  // auto-attach to the active session) appear without a manual reload.
+  useEffect(() => {
+    if (!session) return;
+    const timer = setInterval(() => void fetchItems(session.id), 4000);
+    return () => clearInterval(timer);
+  }, [session, fetchItems]);
+
   const auto = items.find((it) => currentSlideId && it.slideIds.includes(currentSlideId));
-  const selected = manualId ? items.find((it) => it.sessionQuestionId === manualId) : auto;
+  // Prefer a manual pick, then the slide-linked poll, then just the first one —
+  // so controls are visible as soon as the session has any polls.
+  const selected = manualId
+    ? items.find((it) => it.sessionQuestionId === manualId)
+    : (auto ?? items[0]);
 
   const runAction = async (action: 'launch' | 'close' | 'reveal' | 'hide') => {
     if (!selected || !session) return;
